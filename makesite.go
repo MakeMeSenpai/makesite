@@ -1,28 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"os"
+	"flag"
+	"strings"
 	"io/ioutil"
+	"html/template"
 )
 
 func main() {
-	// read first post contents
-	firstPostContents, _ := ioutil.ReadFile("first-post.txt")
+	// flag
+	fileName := flag.String("file", "", "the file name to read")
+	flag.Parse()
 
-	// write first post contents to new-file.txt
-	bytesToWrite := []byte(firstPostContents)
-	err := ioutil.WriteFile("template.tmpl", bytesToWrite, 0644)
+	fileContents, err := ioutil.ReadFile(*fileName)
 	if err != nil {
 		panic(err)
 	}
 
-	// read file contents
-	fileContents, err := ioutil.ReadFile("template.tmpl")
+	f, err := os.Create(strings.SplitN(*fileName, ".", 2)[0] + ".html")
 	if err != nil {
-		// A common use of `panic` is to abort if a function returns an error
-		// value that we don’t know how to (or want to) handle. This example
-		// panics if we get an unexpected error when creating a new file.
 		panic(err)
 	}
-    fmt.Print(string(fileContents))
+
+	t := template.Must(template.New("template.tmpl").ParseFiles("template.tmpl"))
+	err = t.Execute(f, string(fileContents))
+	if err != nil {
+		panic(err)
+	}
 }
